@@ -6,15 +6,12 @@
     <!-- Product and plugin compatibility requirements -->
     <!-- https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.clion</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.cidr.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.chetic.vision.services.MyApplicationService"/>
-        <projectService serviceImplementation="com.github.chetic.vision.services.MyProjectService"/>
         <codeInsight.inlayProvider language="JAVA" implementationClass="com.github.chetic.vision.extensions.NumOfUsagesInlayProvider"/>
+        <codeInsight.inlayProvider language="ObjectiveC" implementationClass="com.github.chetic.vision.extensions.NumOfUsagesInlayProvider"/>
     </extensions>
-
-    <applicationListeners>
-        <listener class="com.github.chetic.vision.listeners.MyProjectManagerListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
 </idea-plugin>

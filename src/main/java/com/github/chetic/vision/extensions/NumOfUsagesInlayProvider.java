@@ -13,6 +13,8 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.CompositePsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.ui.JBColor;
+import com.jetbrains.cidr.lang.psi.OCDeclaration;
+import com.jetbrains.cidr.lang.psi.impl.OCDeclarationImpl;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +50,7 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
 
     @Override
     public boolean isLanguageSupported(@NotNull Language language) {
-        return language.is(Language.findLanguageByID("JAVA"));
+        return language.is(Language.findLanguageByID("ObjectiveC"));
     }
 
     @NotNull
@@ -63,6 +65,15 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
         return new InlayHintsCollector() {
             @Override
             public boolean collect(@NotNull PsiElement psiElement, @NotNull Editor editor, @NotNull InlayHintsSink inlayHintsSink) {
+                // C/C++
+                if (psiElement instanceof OCDeclarationImpl)
+                {
+                    PsiElement psi = ((OCDeclarationImpl) psiElement).getDeclarators().get(0);
+                    Integer numOfUsages = ReferencesSearch.search(psi).findAll().size();
+                    addInlineElement(psiElement, inlayHintsSink, numOfUsages);
+                }
+
+                // Java
                 if (psiElement instanceof CompositePsiElement) {
                     String elementType = ((CompositePsiElement) psiElement).getElementType().toString();
                     Integer numOfUsages;
