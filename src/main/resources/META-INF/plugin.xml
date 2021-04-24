@@ -10,6 +10,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.github.chetic.vision.services.MyApplicationService"/>
         <projectService serviceImplementation="com.github.chetic.vision.services.MyProjectService"/>
+        <codeInsight.inlayProvider language="JAVA" implementationClass="com.github.chetic.vision.extensions.NumOfUsagesInlayProvider"/>
     </extensions>
 
     <applicationListeners>
