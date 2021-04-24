@@ -14,6 +14,7 @@ import com.intellij.psi.impl.source.tree.CompositePsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.ui.JBColor;
 import com.jetbrains.cidr.lang.psi.OCDeclaration;
+import com.jetbrains.cidr.lang.psi.OCDeclarator;
 import com.jetbrains.cidr.lang.psi.impl.OCDeclarationImpl;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -68,31 +69,15 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
                 // C/C++
                 if (psiElement instanceof OCDeclarationImpl)
                 {
-                    PsiElement psi = ((OCDeclarationImpl) psiElement).getDeclarators().get(0);
+                    java.util.List<OCDeclarator> declarators = ((OCDeclarationImpl) psiElement).getDeclarators();
+                    PsiElement psi = declarators.get(0);
                     Integer numOfUsages = ReferencesSearch.search(psi).findAll().size();
-                    addInlineElement(psiElement, inlayHintsSink, numOfUsages);
-                }
-
-                // Java
-                if (psiElement instanceof CompositePsiElement) {
-                    String elementType = ((CompositePsiElement) psiElement).getElementType().toString();
-                    Integer numOfUsages;
-                    if (elementType.equals("LOCAL_VARIABLE")) {
-                        numOfUsages = ReferencesSearch.search(psiElement).findAll().size();
-                        addInlineElement(psiElement, inlayHintsSink, numOfUsages);
-                    } else if (elementType.equals("METHOD_CALL_EXPRESSION")) {
-                        PsiElement sourcePsi = ((PsiReference) psiElement.getFirstChild()).resolve();
-                        if (sourcePsi != null) {
-                            numOfUsages = ReferencesSearch.search(sourcePsi).findAll().size() - 1;
-                            numOfUsages = numOfUsages == -1 ? 0 : numOfUsages;
-                            addInlineElement(psiElement, inlayHintsSink, numOfUsages);
-                        }
-                    }
+                    addInlineElement(psiElement, inlayHintsSink, numOfUsages, declarators.size() > 1 ? Color.orange : Color.green);
                 }
                 return true;
             }
 
-            private void addInlineElement(@NotNull PsiElement psiElement, @NotNull InlayHintsSink inlayHintsSink, Integer numOfUsages) {
+            private void addInlineElement(@NotNull PsiElement psiElement, @NotNull InlayHintsSink inlayHintsSink, Integer numOfUsages, Color bgColor) {
                 inlayHintsSink.addInlineElement(psiElement.getTextOffset(), false, new BasePresentation() {
                     @Override
                     public int getWidth() {
@@ -108,7 +93,7 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
                     public void paint(@NotNull Graphics2D graphics2D, @NotNull TextAttributes textAttributes) {
                         AffineTransform originalTransform = graphics2D.getTransform();
                         graphics2D.scale(0.7, 0.7);
-                        graphics2D.setColor(Color.orange);
+                        graphics2D.setColor(bgColor);
                         graphics2D.fillArc(0, 0, getWidth(), getHeight(), 0, 360);
                         graphics2D.setColor(Color.black);
                         graphics2D.drawString(numOfUsages.toString(), 4, 20);
