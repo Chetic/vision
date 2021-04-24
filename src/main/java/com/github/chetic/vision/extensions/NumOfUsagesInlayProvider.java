@@ -12,9 +12,12 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.CompositePsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.ui.JBColor;
+import com.jetbrains.cidr.lang.psi.OCCallExpression;
 import com.jetbrains.cidr.lang.psi.OCDeclaration;
 import com.jetbrains.cidr.lang.psi.OCDeclarator;
+import com.jetbrains.cidr.lang.psi.OCReferenceExpression;
 import com.jetbrains.cidr.lang.psi.impl.OCDeclarationImpl;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -40,13 +43,13 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
     @NotNull
     @Override
     public String getName() {
-        return "NumOfUsages";
+        return "Vision";
     }
 
     @Nullable
     @Override
     public String getPreviewText() {
-        return "5";
+        return "void foo(); void bar() { foo(); int i = 0; i++; i;i;i; }";
     }
 
     @Override
@@ -67,21 +70,42 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
             @Override
             public boolean collect(@NotNull PsiElement psiElement, @NotNull Editor editor, @NotNull InlayHintsSink inlayHintsSink) {
                 // C/C++
-                if (psiElement instanceof OCDeclarationImpl)
-                {
-                    java.util.List<OCDeclarator> declarators = ((OCDeclarationImpl) psiElement).getDeclarators();
-                    PsiElement psi = declarators.get(0);
-                    Integer numOfUsages = ReferencesSearch.search(psi).findAll().size();
-                    addInlineElement(psiElement, inlayHintsSink, numOfUsages, declarators.size() > 1 ? Color.orange : Color.green);
+                if (psiElement instanceof OCCallExpression) {
+                    Color blobColor;
+                    String blobText = "";
+                    var referenceExpression = PsiTreeUtil.findChildOfType(psiElement, OCReferenceExpression.class);
+                    var declaration = referenceExpression.getFirstChild().getReference().resolve();
+                    if (declaration == null) {
+                        // TODO: When does this happen?
+                        blobColor = Color.red;
+                    } else {
+                        blobColor = Color.cyan;
+                        blobText = String.valueOf(ReferencesSearch.search(declaration).findAll().size());
+                    }
+                    addInlineElement(psiElement, inlayHintsSink, blobText, blobColor);
+                }
+                if (psiElement instanceof OCDeclarationImpl) {
+                    var declarators = ((OCDeclarationImpl) psiElement).getDeclarators();
+                    for (int i = 0; i < declarators.size(); i++) {
+                        PsiElement psi = declarators.get(i);
+                        Integer numOfUsages = ReferencesSearch.search(psi).findAll().size();
+                        Color blobColor;
+                        if (psi.getChildren().length > 1) {
+                            blobColor = Color.orange;
+                        } else {
+                            blobColor = Color.green;
+                        }
+                        addInlineElement(psi, inlayHintsSink, numOfUsages.toString(), blobColor);
+                    }
                 }
                 return true;
             }
 
-            private void addInlineElement(@NotNull PsiElement psiElement, @NotNull InlayHintsSink inlayHintsSink, Integer numOfUsages, Color bgColor) {
+            private void addInlineElement(@NotNull PsiElement psiElement, @NotNull InlayHintsSink inlayHintsSink, String text, Color bgColor) {
                 inlayHintsSink.addInlineElement(psiElement.getTextOffset(), false, new BasePresentation() {
                     @Override
                     public int getWidth() {
-                        return 14 + (4 * numOfUsages.toString().length());
+                        return 14 + (4 * text.length());
                     }
 
                     @Override
@@ -96,7 +120,7 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
                         graphics2D.setColor(bgColor);
                         graphics2D.fillArc(0, 0, getWidth(), getHeight(), 0, 360);
                         graphics2D.setColor(Color.black);
-                        graphics2D.drawString(numOfUsages.toString(), 4, 20);
+                        graphics2D.drawString(text, 4, 20);
                         graphics2D.setTransform(originalTransform);
                     }
                 });
