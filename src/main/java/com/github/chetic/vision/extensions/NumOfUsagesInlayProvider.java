@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.util.Random;
 
 public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> {
     @Override
@@ -95,7 +96,8 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
                         } else {
                             blobColor = Color.green;
                         }
-                        addInlineElement(psi, inlayHintsSink, numOfUsages.toString(), blobColor);
+                        String blobText = numOfUsages.toString();
+                        addInlineElement(psi, inlayHintsSink, blobText, blobColor);
                     }
                 }
                 return true;
@@ -118,12 +120,13 @@ public class NumOfUsagesInlayProvider implements InlayHintsProvider<NoSettings> 
                         AffineTransform originalTransform = graphics2D.getTransform();
                         graphics2D.scale(0.7, 0.7);
                         graphics2D.setColor(bgColor);
-                        graphics2D.fillArc(0, 0, getWidth(), getHeight(), 0, 360);
+                        graphics2D.fillArc(0, 0, (int) ((double)getWidth() * (1.0/0.7)), getHeight(), 0, 360);
                         graphics2D.setColor(Color.black);
+                        graphics2D.setFont(Font.getFont("JetBrains Mono"));
                         graphics2D.drawString(text, 4, 20);
                         graphics2D.setTransform(originalTransform);
                     }
-                });
+                }, false);
             }
         };
     }
